@@ -176,6 +176,44 @@ class DigiKeyboardDevice : public Print {
     // This stops endlessly repeating keystrokes:
 	sendKeyPress(0,0);
   }
+  void sendKeyStroke(byte keyStroke, byte modifiers, uint16_t key_down_time) {
+   	while (!usbInterruptIsReady()) {
+      // Note: We wait until we can send keystroke
+      //       so we know the previous keystroke was
+      //       sent.
+    	usbPoll();
+    	_delay_ms(5);
+    }
+    
+    memset(reportBuffer, 0, sizeof(reportBuffer));
+		
+    reportBuffer[0] = modifiers;
+    reportBuffer[1] = keyStroke;
+    
+    usbSetInterrupt(reportBuffer, sizeof(reportBuffer));
+		
+  	while (!usbInterruptIsReady()) {
+      // Note: We wait until we can send keystroke
+      //       so we know the previous keystroke was
+      //       sent.
+    	usbPoll();
+    	_delay_ms(5);
+    }
+	
+	// Pressing time (in milliseconds) that the key remains pressed
+	// until is released. If is zero don't release the key (it should be
+	// done manually by sendKeysStroke(0). Therefore minimum time is 1ms
+	// and the maximum is 65535ms.
+	if (key_down_time) {
+		while (key_down_time--) {
+			usbPoll();      
+			_delay_ms(1);
+		}
+		// Now send 'no key' pressed
+		memset(reportBuffer, 0, sizeof(reportBuffer));
+		usbSetInterrupt(reportBuffer, sizeof(reportBuffer));	
+	} 
+  }
 
   //sendKeyPress: sends a key press only - no release
   //to release the key, send again with keyPress=0
