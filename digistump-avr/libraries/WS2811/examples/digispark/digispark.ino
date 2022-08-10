@@ -14,7 +14,7 @@ void loop() {
 }
 
 void setPixel(i,r,g,b){
-    rgb[i].r=r;
+	rgb[i].r=r;
     rgb[i].g=g;
     rgb[i].b=b;
 }
